@@ -1,5 +1,6 @@
 # expm_block_tri
 EXPM_BLOCK_TRI - Exponential of block triangular matrix.
+
  [Fa,Fb,L] = expm_block_tri(A,B,E) computes Fa = e^A, Fb = e^B, and
  L = D_{exp}(A,B,E), the (1,2) block of exp([A E;O B]), without explicitly
  computing the exponential of the block triangular matrix, exp([A E;O B]).
