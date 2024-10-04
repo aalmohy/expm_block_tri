@@ -17,4 +17,5 @@ EXPM_BLOCK_TRI - Exponential of block triangular matrix.
       for the matrix exponential, SIAM J. Matrix Anal. Appl., 31(3),
       (2009), pp. 970-989.
 
-   Dependency: MATLAB function qtri_struct used by expm.
+  Note: qtri_struct used by expm, a MATLAB internal function,
+  ...\toolbox\matlab\matfun\private\qtri_struct
