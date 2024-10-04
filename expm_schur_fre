@@ -1,1 +1,84 @@
+function L = expm_schur_fre(A,B,E,semiform)
+%EXPM_SCHUR_FRE Schur-Frechet Algorithm for Kenney and Laub.
+%   L = EXPM_SCHUR_FRE(A,B,E) evaluates the (1,2) block of exp([A E;O B]), 
+%   without explicitly computing the exponential of the block triangular 
+%   matrix, exp([A E;O B]).
+%   the exponentials of A and B are directly evaluated via EXPM.
+%   The method uses the [8/8] Pade approximant of the function tanh(x)/x
+%   to initially approximate L at scaled matrices A/2^s and B/2^s, where s
+%   is a nonnegative integer such that max(norm(A),norm(B)) <= 1/4.
+%   The algorithm has to two versions (see ref. [1]): ``recursive form" 
+%   (default) and ``semirecursive form", chosen by SEMIFORM = 1.
+%   The ``semirecursive form" is NOT recommended by Al-Mohy (see ref. [2]).
 
+%   References:
+%   [1] C. S. Kenney and A. J. Laub. A Schur–Fr´echet algorithm for computing
+%       the logarithm and exponential of a matrix. SIAM J. Matrix Anal. Appl., 
+%       19(3):640–663, 1998 
+%   [2] A. H. Al-Mohy, Generalizing the Fr\'echet Derivative Algorithm for 
+%       the Matrix Exponential, Submitted.
+
+if nargin < 4, semiform = false; end
+real_inputs = false;
+if isreal(A) && isreal(B) && isreal(E), real_inputs = true; end
+
+[Qa, Ta] = schur(A,'complex'); [Qb, Tb] = schur(B,'complex');
+ A = Ta; B = Tb; E = Qa'*E*Qb;    
+
+eta = max(norm(A,'fro'),norm(B,'fro'));
+tol = 100; % suggested by Kenney and Laub [1], but it does not work for some
+           % problems (see ref. [2] above).
+
+s = ceil( log2(eta) + 2 ); % eta/2^s <= 1/4.
+s = max(s,0);
+
+As = A/2^s; Bs = B/2^s;
+
+Ia = eye(size(A)); Ib = eye(size(B));
+
+m = 8;
+% zeros of p8 and q8 in r8 = p8/q8 Pade approximant to tanh(x)/x.
+a = [ 28.89397000316731777742388659046353081105    
+     -28.89397000316731777742388659046353081105    
+      10.28129878376475991487085016697826837877    
+     -10.28129878376475991487085016697826837877    
+      6.289975192164216626597515764089441635494    
+     -6.289975192164216626597515764089441635494    
+      3.141592726147554756387488864552067935611    
+     -3.141592726147554756387488864552067935611 ]*1i;
+
+b = [14.82298119205862980165884536145429404051    
+    -14.82298119205862980165884536145429404051    
+     7.975240462575653880712765566233071891788    
+    -7.975240462575653880712765566233071891788    
+     4.712469314881445788667523493680992429029    
+    -4.712469314881445788667523493680992429029   
+     1.570796326795103469850022125378801062146    
+    -1.570796326795103469850022125378801062146 ]*1i;
+L = E;
+for i=1:m
+    rhs = (Ia + As/a(i)) * L + L * (Ib - Bs/a(i));
+    AA = Ia + As/b(i); BB = Ib - Bs/b(i);
+    L = sylvester(AA, BB, rhs);    
+end
+
+if s > 0
+    Xa = expm(A/2); Xb = expm(B/2);  
+else
+    Xa = expm(A); Xb = expm(B); 
+end
+for i=1:s
+    L = Xa*L + L*Xb;   
+    if i < s
+        if ~semiform || eta/2^i > tol        
+           Xa= expm(A/2^(i+1)); Xb = expm(B/2^(i+1));          
+        else
+           Xa = sqrtm(Xa); Xb = sqrtm(Xb);           
+        end
+    end
+end
+L = Xa*L + L*Xb;
+L = L/2^(s+1);
+L = Qa*L*Qb'; 
+
+if real_inputs, L = real(L); end
