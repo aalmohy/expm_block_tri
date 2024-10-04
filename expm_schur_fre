@@ -1,5 +1,5 @@
 function L = expm_schur_fre(A,B,E,semiform)
-%EXPM_SCHUR_FRE Schur-Frechet Algorithm for Kenney and Laub.
+%EXPM_SCHUR_FRE Schur-Frechet Algorithm of Kenney and Laub.
 %   L = EXPM_SCHUR_FRE(A,B,E) evaluates the (1,2) block of exp([A E;O B]), 
 %   without explicitly computing the exponential of the block triangular 
 %   matrix, exp([A E;O B]).
